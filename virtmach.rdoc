@@ -1,0 +1,5 @@
+= virtmach
+
+Generate this with
+    virtmach rdoc
+After you have described your command line interface
