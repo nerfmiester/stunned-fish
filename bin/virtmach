@@ -33,7 +33,7 @@ arg_name 'Describe arguments to new here'
 command :new do |c|
   c.desc 'The name of the volume group if using lvm'
   c.default_value "VirtualMachines"
-  c.flag :v
+  c.flag [:v,:vgname]
 
   c.desc 'Boot - the boot device '
   c.default_value 'cdrom'
@@ -53,10 +53,14 @@ command :new do |c|
 
   c.action do |global_options,options,args|
 
-    # Your command logic here
-     
-    # If you have any errors, just raise them
-    # raise "that command made no sense"
+    machine=VirtualMachine.new(options[:n],options[:s],options[:v])
+    machine.dryRun=global_options[:t]
+
+    machine.addDisk("#{options[:n]}-boot", 1)
+    machine.addDisk("#{options[:n]}-boot", 2)
+    machine.addDisk("#{options[:n]}-boot", options[:s])
+
+    machine.mkMachine
 
     puts "new command ran"
   end
