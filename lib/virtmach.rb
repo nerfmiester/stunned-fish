@@ -181,9 +181,12 @@ class VirtualMachine
     vmConfig=VirtualMachineConfiguration.new
     vmConfig.each do |host|
 
+    host.disks.each do |disk|
     machine.addDisk("#{options[:n]}-boot", 1)
     machine.addDisk("#{options[:n]}-boot", 2)
     machine.addDisk("#{options[:n]}-boot", options[:s])
+    end
+
     cmd =  "virt-install --connect qemu:///system --name #{@name} --ram 2048 --vcpus 4 --graphics vnc --cdrom #{@cdrom} --boot cdrom --network network:default --os-variant=ubuntuprecise "
     @disks.each{|disk|
       cmd << " --disk path=" << disk.mkPath
@@ -205,12 +208,14 @@ class VirtualMachineConfiguration
   attr_reader :yml , :hosts
 
   def initialize
+    puts 'fred'
     @yml = ::YAML::load(File.open('virtualmachine.yaml'))
+    puts 'load'
     @hosts = virtualMachines
   end
 
   def virtualMachines
-   @hosts ||= @yml['virtualmachines'].each.collect { |type, hash| Machine.new(type, hash['ram'], hash['vcpus'],hash['os'], global) }
+   @hosts ||= @yml['virtualmachines'].each.collect { |type, hash| Machine.new(type, hash['ram'], hash['vcpus'],hash['os'], hash['disks'], global) }
   end
 
   def listVirtualMachinesConfiguration
@@ -220,6 +225,7 @@ class VirtualMachineConfiguration
           puts host.vcpus
           puts host.os
           puts host.global
+          puts host.disks
         end
   end
 
@@ -231,13 +237,14 @@ class VirtualMachineConfiguration
 end
 
 class Machine
-  attr_reader :name, :ram, :vcpus, :os, :global, :disk
+  attr_reader :name, :ram, :vcpus, :os, :global, :disks
 
   def initialize(name, ram, vcpus, os, disks, global)
     @name = name
     @ram = ram
     @vcpus = vcpus
     @os = os
+    @disks=disks
     @global = global.flatten.compact
   end
 
@@ -251,7 +258,7 @@ class Machine
 
 end
 
-class disk
+class Disk
 
   def initialize(name, size)
     @name = name
