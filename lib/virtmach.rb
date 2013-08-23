@@ -1,4 +1,5 @@
-require 'virtmach/version.rb'
+#require 'virtmach/version.rb'
+require 'yaml'
 
 # Add requires for other files you add to your project here, so
 # you just need to require this one file in your bin file
@@ -177,6 +178,12 @@ class VirtualMachine
 
   def mkVM
     exit if machineExists?
+    vmConfig=VirtualMachineConfiguration.new
+    vmConfig.each do |host|
+
+    machine.addDisk("#{options[:n]}-boot", 1)
+    machine.addDisk("#{options[:n]}-boot", 2)
+    machine.addDisk("#{options[:n]}-boot", options[:s])
     cmd =  "virt-install --connect qemu:///system --name #{@name} --ram 2048 --vcpus 4 --graphics vnc --cdrom #{@cdrom} --boot cdrom --network network:default --os-variant=ubuntuprecise "
     @disks.each{|disk|
       cmd << " --disk path=" << disk.mkPath
@@ -190,5 +197,67 @@ class VirtualMachine
     end
 
   end
+
+end
+
+class VirtualMachineConfiguration
+
+  attr_reader :yml , :hosts
+
+  def initialize
+    @yml = ::YAML::load(File.open('virtualmachine.yaml'))
+    @hosts = virtualMachines
+  end
+
+  def virtualMachines
+   @hosts ||= @yml['virtualmachines'].each.collect { |type, hash| Machine.new(type, hash['ram'], hash['vcpus'],hash['os'], global) }
+  end
+
+  def listVirtualMachinesConfiguration
+        @hosts.each do |host|
+          puts host.name
+          puts host.ram
+          puts host.vcpus
+          puts host.os
+          puts host.global
+        end
+  end
+
+  private
+  def global
+    @yml['global']
+  end
+
+end
+
+class Machine
+  attr_reader :name, :ram, :vcpus, :os, :global, :disk
+
+  def initialize(name, ram, vcpus, os, disks, global)
+    @name = name
+    @ram = ram
+    @vcpus = vcpus
+    @os = os
+    @global = global.flatten.compact
+  end
+
+  def ssh_port
+    @global_options["ssh_port"]
+  end
+
+  def shared_config_path_on_go
+    @global_options["shared_config_path_on_go"]
+  end
+
+end
+
+class disk
+
+  def initialize(name, size)
+    @name = name
+    @size = size
+  end
+
+end
 
 end

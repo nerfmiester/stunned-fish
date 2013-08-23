@@ -56,9 +56,7 @@ command :new do |c|
     machine=VirtualMachine.new(options[:n],options[:s],options[:v])
     machine.dryRun=global_options[:t]
 
-    machine.addDisk("#{options[:n]}-boot", 1)
-    machine.addDisk("#{options[:n]}-boot", 2)
-    machine.addDisk("#{options[:n]}-boot", options[:s])
+
 
     machine.mkMachine
 
