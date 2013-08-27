@@ -1,5 +1,79 @@
 #require 'virtmach/version.rb'
 require 'yaml'
+class VirtualMachineConfiguration
+
+  attr_reader :yml , :hosts
+
+  def initialize
+    puts 'fred'
+    @yml = ::YAML::load(File.open('virtualmachine.yaml'))
+    puts 'load'
+    @hosts = virtualMachines
+  end
+
+  def virtualMachines
+    @hosts ||= @yml['virtualmachines'].each.collect { |type, hash| Machine.new(type, hash['ram'], hash['vcpus'],hash['os'], hash['disks'],global) }
+  end
+
+
+  def listVirtualMachinesConfiguration
+    @hosts.each do |host|
+      puts  "The Name of the Host : #{host.name}"
+      puts  "The ram of the Host : #{host.ram}"
+      puts  "The vcpus of the Host : #{host.vcpus}"
+      puts  "The os of the Host : #{host.os}"
+      puts  "The global of the Host : #{host.global}"
+      @yml['global'].each do |key,value|
+        puts "The value of #{key} is #{value}"
+      end
+      host.disks.each do |key, value|
+          puts "The disk called #{key}"
+        value.each do |ky1, vl1|
+            puts  "The #{ky1} of the disk is #{vl1}"
+        end
+      end
+
+    end
+  end
+
+  private
+  def global
+    @yml['global']
+  end
+
+end
+
+class Machine
+  attr_reader :name, :ram, :vcpus, :os, :global, :disks
+
+  def initialize(name, ram, vcpus, os, disks, global)
+    @name = name
+    @ram = ram
+    @vcpus = vcpus
+    @os = os
+    @disks=disks
+    @global = global
+  end
+
+  def ssh_port
+    @global_options["ssh_port"]
+  end
+
+  def shared_config_path_on_go
+    @global_options["shared_config_path_on_go"]
+  end
+
+end
+
+class Disk
+
+  def initialize(name, size)
+    @name = name
+    @size = size
+  end
+
+end
+
 
 # Add requires for other files you add to your project here, so
 # you just need to require this one file in your bin file
@@ -196,73 +270,10 @@ class VirtualMachine
       print "Would Run\n\t"
       puts cmd
     else
-      system(cmd)
+      puts cmd
+      #system(cmd)
     end
 
-  end
-
-end
-
-class VirtualMachineConfiguration
-
-  attr_reader :yml , :hosts
-
-  def initialize
-    puts 'fred'
-    @yml = ::YAML::load(File.open('virtualmachine.yaml'))
-    puts 'load'
-    @hosts = virtualMachines
-  end
-
-  def virtualMachines
-   @hosts ||= @yml['virtualmachines'].each.collect { |type, hash| Machine.new(type, hash['ram'], hash['vcpus'],hash['os'], hash['disks'], global) }
-  end
-
-  def listVirtualMachinesConfiguration
-        @hosts.each do |host|
-          puts host.name
-          puts host.ram
-          puts host.vcpus
-          puts host.os
-          puts host.global
-          puts host.disks
-        end
-  end
-
-  private
-  def global
-    @yml['global']
-  end
-
-end
-
-class Machine
-  attr_reader :name, :ram, :vcpus, :os, :global, :disks
-
-  def initialize(name, ram, vcpus, os, disks, global)
-    @name = name
-    @ram = ram
-    @vcpus = vcpus
-    @os = os
-    @disks=disks
-    @global = global.flatten.compact
-  end
-
-  def ssh_port
-    @global_options["ssh_port"]
-  end
-
-  def shared_config_path_on_go
-    @global_options["shared_config_path_on_go"]
-  end
-
-end
-
-class Disk
-
-  def initialize(name, size)
-    @name = name
-    @size = size
   end
 
 end

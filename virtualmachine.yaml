@@ -15,7 +15,7 @@ virtualmachines:
             name: swap
             size: 2
           disk3:
-            name: root:
+            name: root
             size: 17
      playthepoolsdb:
         ram: 1024
@@ -29,6 +29,6 @@ virtualmachines:
             name: swap
             size: 2
           disk3:
-            name: root:
+            name: root
             size: 17
 
